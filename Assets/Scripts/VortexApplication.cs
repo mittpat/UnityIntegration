@@ -7,6 +7,7 @@ using UnityEngine;
 // Vortex Studio Foreign Function Interface (partial)
 static class VxDLL
 {
+    public const string VortexContent = "C:/CM Labs/Vortex Studio Content 2020a";
     public const string VortexRoot = "C:/CM Labs/Vortex Studio 2020a";
     public const string VortexIntegration = "VortexIntegration.dll";
 
@@ -26,10 +27,10 @@ static class VxDLL
     public static extern bool VortexUnloadScene(ulong sceneHandle);
 
     [DllImport(VortexIntegration)]
-    public static extern unsafe ulong VortexLoadMechanism(string mechanismFile, double* position, double* orientation);
+    public static extern ulong VortexLoadMechanism(string mechanismFile, [In] double[] position, [In] double[] orientation);
 
     [DllImport(VortexIntegration)]
-    public static extern unsafe bool VortexSetWorldTransform(ulong mechanism, double* position, double* orientation);
+    public static extern bool VortexSetWorldTransform(ulong mechanism, [In] double[] position, [In] double[] orientation);
 
     [DllImport(VortexIntegration)]
     public static extern bool VortexUnloadMechanism(ulong sceneHandle);
