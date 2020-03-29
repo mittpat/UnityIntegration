@@ -3,15 +3,29 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+public static class TransformExtension
+{
+    // Depth first search
+    public static Transform FindRecursively(this Transform parent, string name)
+    {
+        foreach (Transform child in parent)
+        {
+            if (child.name == name)
+                return child;
+            var result = child.FindRecursively(name);
+            if (result != null)
+                return result;
+        }
+        return null;
+    }
+}
+
 public class Forklift : MonoBehaviour
 {
     public bool Ready = false;
     public bool Licensed = false;
     public ulong Mechanism = 0;
-    public ulong Body = 0;
-    public double[] BodyPosition = new double[3];
-    public double[] BodyScale = new double[3];
-    public double[] BodyRotation = new double[4];
+    public Dictionary<Transform, ulong> PartMapping = new Dictionary<Transform, ulong>();
 
     // Vortex Studio Forklift
     Forklift()
@@ -48,7 +62,7 @@ public class Forklift : MonoBehaviour
         // Vortex node discovery
         if (Mechanism != 0)
         {
-            uint nodeHandlesCount = 32;
+            uint nodeHandlesCount = 128;
             ulong[] nodeHandles = new ulong[nodeHandlesCount];
             if (VxDLL.VortexGetGraphicsNodeHandles(Mechanism, nodeHandles, ref nodeHandlesCount))
             {
@@ -58,13 +72,35 @@ public class Forklift : MonoBehaviour
                 {
                     if (VxDLL.VortexGetGraphicNodeData(nodeHandles[i], ref nodeData))
                     {
+                        // console output
                         if (discoveredNodes != "")
                         {
                             discoveredNodes += "\n";
                         }
-                        unsafe { discoveredNodes += new string(nodeData.name); }
+                        string nodeName;
+                        unsafe { nodeName = new string(nodeData.name); }
+                        discoveredNodes += nodeName;
+
+                        // mapping
+                        Transform child = TransformExtension.FindRecursively(transform, nodeName);
+                        if (child)
+                        {
+                            PartMapping[child] = nodeHandles[i];
+
+                            // relative position
+                            Vector3 newPosition = new Vector3();
+                            unsafe
+                            {
+                                newPosition.x = (float)nodeData.position[0];
+                                // swizzle Z and Y
+                                newPosition.z = (float)nodeData.position[1];
+                                newPosition.y = (float)nodeData.position[2];
+                            }
+                            transform.localPosition = newPosition;
+                        }
                     }
                 }
+
                 if (nodeHandlesCount > 0)
                 {
                     Debug.Log("Discovered Vortex Nodes:\n" + discoveredNodes);
@@ -92,22 +128,20 @@ public class Forklift : MonoBehaviour
         // Vortex node mapping
         if (Mechanism != 0)
         {
-            uint nodeHandlesCount = 32;
-            ulong[] nodeHandles = new ulong[nodeHandlesCount];
-            if (VxDLL.VortexGetGraphicsNodeHandles(Mechanism, nodeHandles, ref nodeHandlesCount))
+            double[] position = new double[3];
+            double[] scale = new double[3];
+            double[] rotation = new double[4];
+            Vector3 newPosition = new Vector3();
+            foreach (var mapping in PartMapping)
             {
-                VortexGraphicNodeData nodeData = new VortexGraphicNodeData();
-                for (uint i = 0; i < nodeHandlesCount && i < nodeHandles.Length; ++i)
+                if (mapping.Key)
                 {
-                    if (VxDLL.VortexGetGraphicNodeData(nodeHandles[i], ref nodeData))
-                    {
-                        string nodeName = "";
-                        unsafe { nodeName = new string(nodeData.name); }
-                        if (nodeName == "Body")
-                        {
-                            VxDLL.VortexGetParentTransform(nodeHandles[i], BodyPosition, BodyScale, BodyRotation);
-                        }
-                    }
+                    VxDLL.VortexGetParentTransform(mapping.Value, position, scale, rotation);
+                    newPosition.x = (float)position[0];
+                    // swizzle Z and Y
+                    newPosition.z = (float)position[1];
+                    newPosition.y = (float)position[2];
+                    transform.position = newPosition;
                 }
             }
         }

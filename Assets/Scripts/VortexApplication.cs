@@ -118,6 +118,10 @@ public class VortexApplication : MonoBehaviour
         }
 
         System.IO.Directory.SetCurrentDirectory(previous);
+
+        // switch to simulating
+        VxDLL.VortexSetApplicationMode(0, true);
+        VxDLL.VortexPause(false);
     }
 
     // Destroy Vortex Studio application
@@ -125,6 +129,11 @@ public class VortexApplication : MonoBehaviour
     {
         if (Ready)
         {
+            // switch to editing
+            VxDLL.VortexPause(true);
+            VxDLL.VortexSetApplicationMode(1, true);
+
+            // unload and destroy
             VxDLL.VortexDestroyApplication();
 
             Ready = false;

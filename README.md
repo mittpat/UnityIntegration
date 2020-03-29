@@ -12,4 +12,4 @@ Useful links:
 
 [Vortex Studio Unreal Engine Documentation](https://www.cm-labs.com/vortexstudiodocumentation/Vortex_User_Documentation/Content/Unreal/unreal_index.htm)
 
-![Forklift](SampleScene.png)
+![Forklift](Unity.gif)
