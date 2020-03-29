@@ -8,6 +8,10 @@ public class Forklift : MonoBehaviour
     public bool Ready = false;
     public bool Licensed = false;
     public ulong Mechanism = 0;
+    public ulong Body = 0;
+    public double[] BodyPosition = new double[3];
+    public double[] BodyScale = new double[3];
+    public double[] BodyRotation = new double[4];
 
     // Vortex Studio Forklift
     Forklift()
@@ -40,6 +44,33 @@ public class Forklift : MonoBehaviour
     void OnEnable()
     {
         Mechanism = VxDLL.VortexLoadMechanism(VxDLL.VortexContent + "/" + "Demo Scenes/Equipment/Forklift/Dynamic/Design/Forklift.vxmechanism", new double[3] { 0.0, 0.0, 0.0 }, new double[4] { 0.0, 0.0, 0.0, 1.0 });
+
+        // Vortex node discovery
+        if (Mechanism != 0)
+        {
+            uint nodeHandlesCount = 32;
+            ulong[] nodeHandles = new ulong[nodeHandlesCount];
+            if (VxDLL.VortexGetGraphicsNodeHandles(Mechanism, nodeHandles, ref nodeHandlesCount))
+            {
+                string discoveredNodes = "";
+                VortexGraphicNodeData nodeData = new VortexGraphicNodeData();
+                for (uint i = 0; i < nodeHandlesCount && i < nodeHandles.Length; ++i)
+                {
+                    if (VxDLL.VortexGetGraphicNodeData(nodeHandles[i], ref nodeData))
+                    {
+                        if (discoveredNodes != "")
+                        {
+                            discoveredNodes += "\n";
+                        }
+                        unsafe { discoveredNodes += new string(nodeData.name); }
+                    }
+                }
+                if (nodeHandlesCount > 0)
+                {
+                    Debug.Log("Discovered Vortex Nodes:\n" + discoveredNodes);
+                }
+            }
+        }
     }
 
     // Destroy Vortex Studio mechanism
@@ -58,6 +89,27 @@ public class Forklift : MonoBehaviour
     // FixedUpdate is called on a fixed timestep
     void FixedUpdate()
     {
-
+        // Vortex node mapping
+        if (Mechanism != 0)
+        {
+            uint nodeHandlesCount = 32;
+            ulong[] nodeHandles = new ulong[nodeHandlesCount];
+            if (VxDLL.VortexGetGraphicsNodeHandles(Mechanism, nodeHandles, ref nodeHandlesCount))
+            {
+                VortexGraphicNodeData nodeData = new VortexGraphicNodeData();
+                for (uint i = 0; i < nodeHandlesCount && i < nodeHandles.Length; ++i)
+                {
+                    if (VxDLL.VortexGetGraphicNodeData(nodeHandles[i], ref nodeData))
+                    {
+                        string nodeName = "";
+                        unsafe { nodeName = new string(nodeData.name); }
+                        if (nodeName == "Body")
+                        {
+                            VxDLL.VortexGetParentTransform(nodeHandles[i], BodyPosition, BodyScale, BodyRotation);
+                        }
+                    }
+                }
+            }
+        }
     }
 }

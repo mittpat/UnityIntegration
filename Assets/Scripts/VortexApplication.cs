@@ -7,6 +7,7 @@ using UnityEngine;
 // Vortex Studio Foreign Function Interface (partial)
 static class VxDLL
 {
+    public const int VortexNameSize = 64;
     public const string VortexContent = "C:/CM Labs/Vortex Studio Content 2020a";
     public const string VortexRoot = "C:/CM Labs/Vortex Studio 2020a";
     public const string VortexIntegration = "VortexIntegration.dll";
@@ -30,10 +31,10 @@ static class VxDLL
     public static extern ulong VortexLoadMechanism(string mechanismFile, [In] double[] position, [In] double[] orientation);
 
     [DllImport(VortexIntegration)]
-    public static extern bool VortexSetWorldTransform(ulong mechanism, [In] double[] position, [In] double[] orientation);
+    public static extern bool VortexSetWorldTransform(ulong mechanismHandle, [In] double[] position, [In] double[] orientation);
 
     [DllImport(VortexIntegration)]
-    public static extern bool VortexUnloadMechanism(ulong sceneHandle);
+    public static extern bool VortexUnloadMechanism(ulong mechanismHandle);
 
     [DllImport(VortexIntegration)]
     public static extern bool VortexSetApplicationMode(int mode, bool waitForModeToBeApplied);
@@ -43,6 +44,27 @@ static class VxDLL
 
     [DllImport(VortexIntegration)]
     public static extern void VortexDestroyApplication();
+
+    [DllImport(VortexIntegration)]
+    public static extern bool VortexGetGraphicsNodeHandles(ulong objectHandle, [In, Out] ulong[] nodeHandleArray, ref uint nodeHandleCount);
+
+    [DllImport(VortexIntegration)]
+    public static extern bool VortexGetGraphicNodeData(ulong nodeHandle, ref VortexGraphicNodeData graphicNodeData);
+
+    [DllImport(VortexIntegration)]
+    public static extern void VortexGetParentTransform(ulong objectHandle, [In, Out] double[] translation, [In, Out] double[] scale, [In, Out] double[] rotationQuaternion);
+}
+
+unsafe struct VortexGraphicNodeData
+{
+    public fixed double position[3];
+    public fixed double scale[3];
+    public fixed double rotation[4];
+    public fixed ulong parentNodeContentID[2];
+    public fixed ulong contentID[2];
+    public fixed char name[VxDLL.VortexNameSize];
+    public bool hasGeometry;
+    public bool hasConnection;
 }
 
 public class VortexApplication : MonoBehaviour
