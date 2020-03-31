@@ -1,6 +1,8 @@
-# UnityIntegration
+# Unity Integration
 
 Prototype Unity 3D integration for Vortex Studio.
+
+**Provided as example code with no commitment from CM Labs Simulations Inc.**
 
 Usage:
 * Requires a valid Vortex Studio license, available for Windows and Ubuntu _(See [Vortex Studio Homepage](https://www.cm-labs.com/vortex-studio/))_
